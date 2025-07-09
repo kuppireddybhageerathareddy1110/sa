@@ -18,15 +18,31 @@ def home():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    data = request.get_json()
-    text = data.get("text", "")
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
+    try:
+        data = request.get_json()
+        text = data.get("text", "").strip()
 
-    sentiment = "Positive" if polarity > 0 else "Negative" if polarity < 0 else "Neutral"
-    result = {"text": text, "sentiment": sentiment, "polarity": polarity}
-    collection.insert_one(result)
-    return jsonify({"results": [result]})
+        if not text:
+            return jsonify({"error": "Text is required"}), 400
+
+        blob = TextBlob(text)
+        polarity = blob.sentiment.polarity
+        sentiment = "Positive" if polarity > 0 else "Negative" if polarity < 0 else "Neutral"
+
+        result = {
+            "text": text,
+            "sentiment": sentiment,
+            "polarity": polarity
+        }
+
+        inserted = collection.insert_one(result)
+        result["_id"] = str(inserted.inserted_id)
+
+        return jsonify({"results": [result]})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route("/results", methods=["GET"])
 def results():
