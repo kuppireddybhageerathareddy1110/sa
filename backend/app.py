@@ -12,6 +12,10 @@ client = MongoClient(os.environ.get("MONGODB_URI"))
 db = client['sentiment_db']
 collection = db['sentiments']
 
+@app.route("/")
+def home():
+    return "✅ Flask Sentiment API is running. Use POST /analyze and GET /results."
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     data = request.get_json()
